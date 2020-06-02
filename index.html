@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>react-three-fiber</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/@babel/standalone@7.8.3/babel.js"></script>
+  <script>
+    Babel.registerPreset("custom-preset", {
+      presets: [
+        [Babel.availablePresets["es2015"], { "modules": false }],
+        [Babel.availablePresets["react"]]
+      ],
+      plugins: [
+        [Babel.availablePlugins["transform-modules-umd"]]
+      ],
+      moduleId: "main"
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r99/three.min.js"></script>
+  <script src="https://unpkg.com/react@16.13.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.development.js"></script>
+  <script type="module" src="https://unpkg.com/scheduler@0.19.1/umd/scheduler.development.js"></script>
+  <script type="module" src="https://www.unpkg.com/react-three-fiber@4.2.8/web.js"></script>
+  
+  <script type="text/babel" src="./app.js" data-plugins="transform-modules-umd"></script>
+  <script type="text/babel" data-presets="custom-preset">
+    import App from './app';
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
