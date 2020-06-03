@@ -1,50 +1,106 @@
-// Renderer
-const renderer = new THREE.WebGLRenderer({
-  canvas: document.getElementById('canvas'),
-  antialias: true
-});
-renderer.setClearColor(0x25c8ce);
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
+let gl;
+let shaderProgram;
+let vertices;
+let vertexCount = 5000;
 
-// Camera
-const camera = new THREE.PerspectiveCamera(
-  35,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  3000
-);
+initGL();
+createShaders();
+createVertices();
+draw();
 
-// Scene
-const scene = new THREE.Scene();
+function initGL() {
+  var canvas = document.getElementById('canvas');
+  console.log(canvas);
+  gl = canvas.getContext('webgl');
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(1, 1, 1, 1);
+}
 
-// Lights
-const light1 = new THREE.AmbientLight(0xffffff, 0.5);
-const light2 = new THREE.PointLight(0xffffff, 1);
+function createShaders() {
+  var vertexShader = getShader(gl, 'shader-vs');
+  var fragmentShader = getShader(gl, 'shader-fs');
+  
+  shaderProgram = gl.createProgram();
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  gl.linkProgram(shaderProgram);
+  gl.useProgram(shaderProgram);
+}
 
-scene.add(light1);
-scene.add(light2);
+function createVertices() {
+  vertices = [];
+  for(var i = 0; i < vertexCount; i++) {
+    vertices.push(Math.random() * 2 - 1);
+    vertices.push(Math.random() * 2 - 1);
+  }
+    
+  var buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+  
+  var coords = gl.getAttribLocation(shaderProgram, 'coords');
+  gl.vertexAttribPointer(coords, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(coords);
+  
+  var pointSize = gl.getAttribLocation(shaderProgram, 'pointSize');
+  gl.vertexAttrib1f(pointSize, 1);
+  
+  var color = gl.getUniformLocation(shaderProgram, 'color');
+  gl.uniform4f(color, 0, 0, 0, 1);
+}
 
-// Object
-const geometry = new THREE.CubeGeometry(100, 100, 100);
-const material = new THREE.MeshLambertMaterial({ color: 0xf3ffe2 });
-const mesh = new THREE.Mesh(geometry, material);
+function draw() {
+  for(var i = 0; i < vertexCount * 2; i += 2) {
+    vertices[i] += Math.random() * 0.01 - 0.005;
+    vertices[i + 1] += Math.random() * 0.01 - 0.005;
+  }
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(vertices));
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.POINTS, 0, vertexCount);
+  
+  requestAnimationFrame(draw);
+}
 
-mesh.position.set(0, 0, -1000); //set the view position backwards in space so we can see it
-scene.add(mesh);
+/*
+  * https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Adding_2D_content_to_a_WebGL_context
+  */
+function getShader(gl, id) {
+  var shaderScript, theSource, currentChild, shader;
 
-// Set up the render loop
-requestAnimationFrame(render);
+  shaderScript = document.getElementById(id);
 
-function render() {
-  mesh.rotation.x += 0.01;
-  mesh.rotation.y += 0.03;
-  renderer.render(scene, camera);
-  requestAnimationFrame(render);
-};
+  if (!shaderScript) {
+    return null;
+  }
 
-window.addEventListener( 'resize', function () {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize( window.innerWidth, window.innerHeight );
-}, false );
+  theSource = '';
+  currentChild = shaderScript.firstChild;
+
+  while (currentChild) {
+    if (currentChild.nodeType == currentChild.TEXT_NODE) {
+      theSource += currentChild.textContent;
+    }
+
+    currentChild = currentChild.nextSibling;
+  }
+  if (shaderScript.type == 'x-shader/x-fragment') {
+    shader = gl.createShader(gl.FRAGMENT_SHADER);
+  } else if (shaderScript.type == 'x-shader/x-vertex') {
+    shader = gl.createShader(gl.VERTEX_SHADER);
+  } else {
+    // Unknown shader type
+    return null;
+  }
+  gl.shaderSource(shader, theSource);
+
+// Compile the shader program
+  gl.compileShader(shader);
+
+// See if it compiled successfully
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+    return null;
+  }
+
+  return shader;
+}

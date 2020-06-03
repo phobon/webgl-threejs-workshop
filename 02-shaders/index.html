@@ -13,11 +13,24 @@
   </style>
 </head>
 <body>
-  <canvas id="canvas">
-  </canvas>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r99/three.min.js"></script>
-  <script src="https://cdn.rawgit.com/mrdoob/three.js/dev/examples/js/controls/TrackballControls.js"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.8.3/babel.js"></script>
-  <script src="./index.js" type="text/babel"></script>
+  <canvas id="canvas" width="600" height="600"></canvas>
+
+  <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec4 coords;
+    attribute float pointSize;
+    void main(void) {
+      gl_Position = coords;
+      gl_PointSize = pointSize;
+    }
+  </script>
+    
+  <script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform vec4 color;
+    void main(void) {
+      gl_FragColor = color;
+    }
+  </script>
+  <script src="./index.js"></script>
 </body>
 </html>
